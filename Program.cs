@@ -26,6 +26,7 @@ if(!File.Exists(ConfigFile))
     catch (Exception ex)
     {
         Console.WriteLine($"Failed to get or store {ConfigFile} settings from user: {ex}");
+        return;
     }
 }
 else
@@ -33,13 +34,14 @@ else
     try
     {
         var deserialize = new Deserializer();
-        config = deserialize.Deserialize<Config>(ConfigFile);
+        config = deserialize.Deserialize<Config>(File.ReadAllText(ConfigFile));
 
         Console.WriteLine($"Loaded settings in {ConfigFile}");
     }
     catch (Exception ex)
     {
         Console.WriteLine($"Failed to deserialize {ConfigFile}: {ex}");
+        return;
     }
 }
 
