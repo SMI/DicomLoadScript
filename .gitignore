@@ -1,12 +1,11 @@
-BadMedicine/obj/
-BadMedicine/bin/
 *.user
-BadMedicine/.vs/
 .vs/
 Visual Studio 2017/
-BadMedicineTests/obj/
 *.vspx
 *.psess
-BadMedicineTests/bin/
-BadMedicine.Core/obj/
-BadMedicine.Core/bin/
+*.suo
+*.user
+_ReSharper.*
+bin
+obj
+packages
