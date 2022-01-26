@@ -1,18 +1,47 @@
-﻿using System;
+﻿using LoadScript;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using YamlDotNet.Serialization;
 
 const string ProgressFilename = "LastMonthDone.txt";
+const string ConfigFile = "Config.yaml";
 
-if(!File.Exists("rdmp.exe"))
+Config config = new Config();
+
+if(!File.Exists(ConfigFile))
 {
-    Console.WriteLine("This file must be run from the RDMP CLI directory");
-    return;
-}
 
-Console.WriteLine("Enter Year Directory e.g. G:\\2010\\");
-var yearDir = new DirectoryInfo(Console.ReadLine());
+    try
+    {
+
+        Console.WriteLine($"{ConfigFile} not found, you will be prompted for settings now");
+        config = Config.MakeUserType();
+
+        Console.WriteLine($"Storing the settings you entered into {ConfigFile}");
+        var serializer = new Serializer();
+        File.WriteAllText(ConfigFile, serializer.Serialize(config));
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Failed to get or store {ConfigFile} settings from user: {ex}");
+    }
+}
+else
+{
+    try
+    {
+        var deserialize = new Deserializer();
+        config = deserialize.Deserialize<Config>(ConfigFile);
+
+        Console.WriteLine($"Loaded settings in {ConfigFile}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Failed to deserialize {ConfigFile}: {ex}");
+    }
+}
 
 string startAtMonth;
 
@@ -28,13 +57,8 @@ else
     startAtMonth = progress.ToString("D2");
 }
 
-Console.WriteLine("Enter ForLoading Directory e.g. C:\\temp\\ImageLoading\\Data\\ForLoading");
-var forLoading = Console.ReadLine();
 
-Console.WriteLine("Enter RDMP Load ID e.g. 3136");
-var lmdId = Console.ReadLine();
-
-int year = int.Parse(yearDir.Name);
+int year = int.Parse(new DirectoryInfo(config.YearDir).Name);
 int month = int.Parse(startAtMonth);
 
 GoGo:
@@ -48,17 +72,17 @@ if (month > 12)
 StringBuilder sb = new StringBuilder();
 for(int i=1;i<= DateTime.DaysInMonth(year, month); i++)
 {
-    sb.AppendLine(Path.Combine(yearDir.FullName, month.ToString("D2"), i.ToString("D2")));
+    sb.AppendLine(Path.Combine(config.YearDir, month.ToString("D2"), i.ToString("D2")));
 }
 
 
-File.WriteAllText(Path.Combine(forLoading, "LoadMe.txt"), sb.ToString());
+File.WriteAllText(Path.Combine(config.ForLoading, "LoadMe.txt"), sb.ToString());
 
 
 int retryCount = 10;
 Retry:
 
-var pCheck = Process.Start("rdmp.exe", $"dle -l {lmdId} --command check");
+var pCheck = Process.Start(config.RdmpCli, $"dle -l {config.LoadMetadataID} --command check");
 pCheck.WaitForExit();
 
 if(pCheck.ExitCode != 0)
@@ -77,7 +101,7 @@ if(pCheck.ExitCode != 0)
     }
 }
 
-var pRun = Process.Start("rdmp.exe", $"dle -l {lmdId} --command run");
+var pRun = Process.Start(config.RdmpCli, $"dle -l {config.LoadMetadataID} --command run");
 pRun.WaitForExit();
 
 if (pRun.ExitCode != 0)
