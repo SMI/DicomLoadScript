@@ -8,7 +8,8 @@ using YamlDotNet.Serialization;
 const string ProgressFilename = "LastMonthDone.txt";
 const string ConfigFile = "Config.yaml";
 
-Config config = new Config();
+Config config;
+
 
 if(!File.Exists(ConfigFile))
 {
@@ -81,7 +82,7 @@ for(int i=1;i<= DateTime.DaysInMonth(year, month); i++)
 File.WriteAllText(Path.Combine(config.ForLoading, "LoadMe.txt"), sb.ToString());
 
 
-int retryCount = 10;
+int retryIdx = 0;
 Retry:
 
 var pCheck = Process.Start(config.RdmpCli, $"dle -l {config.LoadMetadataID} --command check");
@@ -90,9 +91,10 @@ pCheck.WaitForExit();
 if(pCheck.ExitCode != 0)
 {
     Console.WriteLine("Checking failed");
-    if(retryCount >0)
+    if(config.ShouldTry(retryIdx))
     {
-        retryCount--;
+        config.RetrySleep(retryIdx);
+        retryIdx++;
         Console.WriteLine("Retrying checks");
         goto Retry;
     }
@@ -109,9 +111,10 @@ pRun.WaitForExit();
 if (pRun.ExitCode != 0)
 {
     Console.WriteLine("Running failed");
-    if (retryCount > 0)
+    if (config.ShouldTry(retryIdx))
     {
-        retryCount--;
+        config.RetrySleep(retryIdx);
+        retryIdx++;
         Console.WriteLine("Retrying (starting with rechecking)");
         goto Retry;
     }
