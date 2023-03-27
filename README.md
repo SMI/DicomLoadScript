@@ -20,4 +20,4 @@ for example
      └ 03
 ```
 
-Each day folder should contain dicom files.  This script does not work alone and requires [RDMP](https://github.com/HicServices/RDMP) and [RDMP.Dicom Plugin](https://github.com/HicServices/RdmpDicom) to work
+Each day folder should contain dicom files.  This script does not work alone and requires [RDMP](https://github.com/HicServices/RDMP) and [RDMP.Dicom Plugin](https://github.com/SMI/RdmpDicom) to work
